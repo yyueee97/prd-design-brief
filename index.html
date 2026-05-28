@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRD to Design Brief</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">DB</div>
+          <div>
+            <h1>DesignOps Brief</h1>
+            <p>PRD intelligence workspace</p>
+          </div>
+        </div>
+
+        <section class="panel input-panel">
+          <div class="panel-heading">
+            <h2>PRD 输入</h2>
+            <button class="icon-button" id="loadSample" type="button" title="载入示例">↺</button>
+          </div>
+
+          <label class="upload-zone" for="prdFile">
+            <input id="prdFile" type="file" accept=".txt,.md,.markdown,.prd" />
+            <span class="upload-title">上传 PRD</span>
+            <span class="upload-meta">Markdown / TXT</span>
+          </label>
+
+          <label class="field">
+            <span>飞书 PRD 链接</span>
+            <div class="inline-field">
+              <input id="larkDocUrl" type="url" placeholder="https://.../docx/..." />
+              <button id="importLarkDoc" type="button">读取</button>
+            </div>
+            <small id="larkStatus">需要本地服务或 lark-cli 授权后读取受保护文档</small>
+          </label>
+
+          <label class="field">
+            <span>产品类型</span>
+            <select id="productType">
+              <option>效率工具</option>
+              <option>B 端后台</option>
+              <option>移动 App</option>
+              <option>小程序</option>
+              <option>内容社区</option>
+              <option>电商交易</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>设计平台</span>
+            <select id="platform">
+              <option>Web</option>
+              <option>iOS / Android</option>
+              <option>小程序</option>
+              <option>多端适配</option>
+            </select>
+          </label>
+
+          <div class="figma-target">
+            <div class="figma-title">
+              <span>Figma 目标</span>
+              <strong>Plugin Ready</strong>
+            </div>
+            <label class="field">
+              <span>文件 URL</span>
+              <input id="figmaFileUrl" type="url" placeholder="粘贴目标 Figma 文件链接" />
+            </label>
+            <label class="field">
+              <span>生成页面</span>
+              <input id="figmaPageName" type="text" value="PRD UX Brief" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>PRD 内容</span>
+            <textarea id="prdText" spellcheck="false" placeholder="粘贴 PRD 内容，或上传文件后自动填入"></textarea>
+          </label>
+
+          <button class="primary-button" id="generate" type="button">生成设计文档</button>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <section class="topbar">
+          <div>
+            <p class="eyebrow">UX Brief Generator</p>
+            <h2>把 PRD 变成可评审的设计启动文档</h2>
+          </div>
+          <div class="actions">
+            <button id="copyDoc" type="button">复制 Markdown</button>
+            <button id="copyFigmaPayload" type="button">复制 Figma 数据</button>
+            <button id="createLarkDoc" type="button">创建飞书文档</button>
+            <button id="downloadDoc" type="button">下载 .md</button>
+          </div>
+        </section>
+
+        <section class="grid">
+          <div class="panel analysis-panel">
+            <div class="panel-heading">
+              <h2>PRD 解析</h2>
+              <span class="status-pill" id="parseStatus">等待输入</span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <strong id="goalCount">0</strong>
+                <span>目标</span>
+              </div>
+              <div>
+                <strong id="pageCount">0</strong>
+                <span>页面</span>
+              </div>
+              <div>
+                <strong id="riskCount">0</strong>
+                <span>风险</span>
+              </div>
+            </div>
+            <div class="insight-list" id="insights"></div>
+          </div>
+
+          <div class="panel doc-panel">
+            <div class="panel-heading">
+              <h2>设计文档预览</h2>
+              <span class="status-pill ready">可编辑</span>
+            </div>
+            <article id="docPreview" class="doc-preview"></article>
+          </div>
+
+          <div class="panel visual-panel">
+            <div class="panel-heading">
+              <h2>设计图清单</h2>
+              <span class="status-pill">自动生成</span>
+            </div>
+            <div id="wireframes" class="wireframes"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
