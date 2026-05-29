@@ -47,6 +47,8 @@ const els = {
   larkDocUrl: document.querySelector("#larkDocUrl"),
   importLarkDoc: document.querySelector("#importLarkDoc"),
   larkStatus: document.querySelector("#larkStatus"),
+  larkAuthStatus: document.querySelector("#larkAuthStatus"),
+  larkAuthButton: document.querySelector("#larkAuthButton"),
   productType: document.querySelector("#productType"),
   platform: document.querySelector("#platform"),
   figmaFileUrl: document.querySelector("#figmaFileUrl"),
@@ -68,6 +70,7 @@ const els = {
 
 let currentMarkdown = "";
 let currentFigmaPayload = {};
+let larkConnected = false;
 
 const sectionAliases = {
   background: ["背景", "项目背景", "业务背景", "现状"],
@@ -256,6 +259,27 @@ function getLarkDocToken(url) {
   return match?.[1] ?? "";
 }
 
+async function refreshLarkSession() {
+  try {
+    const response = await fetch("/api/lark/session");
+    if (!response.ok) throw new Error("session unavailable");
+    const data = await response.json();
+    larkConnected = Boolean(data.connected);
+  } catch {
+    larkConnected = false;
+  }
+
+  els.larkAuthStatus.textContent = larkConnected ? "已连接" : "未连接";
+  els.larkAuthButton.textContent = larkConnected ? "退出" : "连接飞书";
+  els.larkStatus.textContent = larkConnected
+    ? "已授权，可读取飞书 PRD 并创建飞书设计文档"
+    : "连接飞书后可直接读取受保护文档";
+}
+
+function goToLarkLogin() {
+  window.location.href = "/api/lark/login";
+}
+
 function buildFigmaPayload(data) {
   return {
     schema: "prd-to-figma-wireframes/v1",
@@ -429,17 +453,37 @@ els.importLarkDoc.addEventListener("click", async () => {
     return;
   }
 
-  els.larkStatus.textContent = "正在尝试读取本地飞书导入服务...";
+  if (!larkConnected) {
+    els.larkStatus.textContent = "请先连接飞书";
+    goToLarkLogin();
+    return;
+  }
+
+  els.larkStatus.textContent = "正在读取飞书 PRD...";
   try {
     const response = await fetch(`/api/lark-doc?url=${encodeURIComponent(url)}`);
-    if (!response.ok) throw new Error("missing local service");
+    if (response.status === 401) {
+      goToLarkLogin();
+      return;
+    }
+    if (!response.ok) throw new Error("fetch failed");
     const data = await response.json();
     els.prdText.value = data.markdown || data.text || "";
     els.larkStatus.textContent = "已从飞书文档导入 PRD";
     generate();
-  } catch {
-    els.larkStatus.textContent = `已识别文档 token：${token}。当前静态服务未接入飞书授权，请用 scripts/import-lark-prd.sh 拉取后粘贴正文。`;
+  } catch (error) {
+    els.larkStatus.textContent = `读取失败。已识别文档 token：${token}，请确认权限和飞书 API scopes。`;
   }
+});
+
+els.larkAuthButton.addEventListener("click", async () => {
+  if (!larkConnected) {
+    goToLarkLogin();
+    return;
+  }
+
+  await fetch("/api/lark/logout", { method: "POST" });
+  await refreshLarkSession();
 });
 
 els.generate.addEventListener("click", generate);
@@ -469,6 +513,10 @@ els.copyFigmaPayload.addEventListener("click", async () => {
 
 els.createLarkDoc.addEventListener("click", async () => {
   if (!currentMarkdown) generate();
+  if (!larkConnected) {
+    goToLarkLogin();
+    return;
+  }
   els.createLarkDoc.textContent = "准备中";
   try {
     const response = await fetch("/api/lark-doc/create", {
@@ -476,14 +524,18 @@ els.createLarkDoc.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ markdown: currentMarkdown }),
     });
-    if (!response.ok) throw new Error("missing local service");
+    if (response.status === 401) {
+      goToLarkLogin();
+      return;
+    }
+    if (!response.ok) throw new Error("create failed");
     const data = await response.json();
     if (data.url) window.open(data.url, "_blank");
     els.createLarkDoc.textContent = "已创建";
   } catch {
     await navigator.clipboard.writeText(currentMarkdown);
     els.createLarkDoc.textContent = "已复制内容";
-    alert("当前静态服务未接入飞书创建接口。已复制 Markdown，请用 scripts/create-lark-design-doc.sh 创建飞书文档。");
+    alert("创建飞书文档失败。已复制 Markdown，请检查飞书 API 权限或稍后重试。");
   } finally {
     setTimeout(() => {
       els.createLarkDoc.textContent = "创建飞书文档";
@@ -504,3 +556,4 @@ els.downloadDoc.addEventListener("click", () => {
 
 els.prdText.value = samplePrd;
 generate();
+refreshLarkSession();

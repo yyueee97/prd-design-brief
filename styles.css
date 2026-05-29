@@ -251,6 +251,41 @@ button:hover {
   cursor: pointer;
 }
 
+.lark-auth {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(74, 163, 255, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.56);
+  padding: 12px;
+}
+
+.lark-auth div {
+  display: grid;
+  gap: 3px;
+}
+
+.lark-auth strong {
+  font-size: 13px;
+}
+
+.lark-auth span {
+  color: #5d7285;
+  font-size: 12px;
+}
+
+.lark-auth button {
+  min-height: 34px;
+  border-color: rgba(74, 163, 255, 0.34);
+  background: #fff;
+  color: var(--accent-dark);
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
 .upload-zone:hover {
   border-color: rgba(25, 118, 210, 0.6);
 }
